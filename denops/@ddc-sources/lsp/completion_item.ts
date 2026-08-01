@@ -438,39 +438,16 @@ export function byteLength(
 }
 
 function shouldCreateSelectText(lspItem: LSP.CompletionItem): boolean {
-  const kind = lspItem.kind ?? 1;
-
   if (lspItem.insertTextFormat === LSP.InsertTextFormat.Snippet) {
     return true;
   }
 
-  switch (kind) {
+  switch (lspItem.kind ?? 1) {
     case LSP.CompletionItemKind.Snippet:
     case LSP.CompletionItemKind.Function:
     case LSP.CompletionItemKind.Method:
     case LSP.CompletionItemKind.Constructor:
-    case LSP.CompletionItemKind.Keyword:
-    case LSP.CompletionItemKind.Class:
-    case LSP.CompletionItemKind.Struct:
-    case LSP.CompletionItemKind.Interface:
-    case LSP.CompletionItemKind.Module:
-    case LSP.CompletionItemKind.Property:
-    case LSP.CompletionItemKind.Enum:
-    case LSP.CompletionItemKind.EnumMember:
-    case LSP.CompletionItemKind.Constant:
-    case LSP.CompletionItemKind.TypeParameter:
       return true;
-
-    case LSP.CompletionItemKind.Text:
-    case LSP.CompletionItemKind.File:
-    case LSP.CompletionItemKind.Folder:
-    case LSP.CompletionItemKind.Variable:
-    case LSP.CompletionItemKind.Field:
-    case LSP.CompletionItemKind.Value:
-    case LSP.CompletionItemKind.Color:
-    case LSP.CompletionItemKind.Reference:
-    case LSP.CompletionItemKind.Unit:
-    case LSP.CompletionItemKind.Operator:
     default:
       return false;
   }
