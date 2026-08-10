@@ -33,7 +33,7 @@ end
 ---@return table
 local function normalize(tbl)
   if type(tbl) ~= "table" then
-    return tbl
+    return {}
   end
 
   local normalized = {}

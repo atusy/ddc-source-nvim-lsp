@@ -4,6 +4,9 @@ local M = {}
 ---@return table client_capabilities
 function M.make_client_capabilities(override)
   local capabilities = vim.lsp.protocol.make_client_capabilities()
+  if not capabilities.textDocument then
+    return {}
+  end
   capabilities.textDocument.completion = {
     dynamicRegistration = false,
     completionItem = {
@@ -48,7 +51,9 @@ function M.make_client_capabilities(override)
       },
     },
   }
-  capabilities = vim.tbl_deep_extend("force", capabilities, override or {})
+  capabilities = vim.tbl_deep_extend(
+      "force", capabilities, override or {}
+  ) --[[@as table]]
   return capabilities
 end
 
