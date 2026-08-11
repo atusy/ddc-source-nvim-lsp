@@ -29,11 +29,11 @@ end
 
 ---Neovim may put true, etc. in key when converting from vim script.
 ---:h lua-special-tbl
----@param tbl table
----@return table
+---@param tbl unknown
+---@return unknown
 local function normalize(tbl)
   if type(tbl) ~= "table" then
-    return {}
+    return tbl
   end
 
   local normalized = {}
@@ -46,13 +46,22 @@ local function normalize(tbl)
   return normalized
 end
 
+---@param err unknown
+local function format_error(err)
+  if type(err) == "table" then
+    return vim.inspect(err)
+  end
+
+  return tostring(err)
+end
+
 ---@param method string
 ---@param err unknown
 local function notify_request_error(method, err)
   vim.notify(
     ("ddc_source_lsp: request error (%s): %s"):format(
       method,
-      tostring(err)
+      format_error(err)
     ),
     vim.log.levels.DEBUG
   )
