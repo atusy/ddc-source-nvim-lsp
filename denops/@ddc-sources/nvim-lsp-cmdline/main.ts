@@ -13,6 +13,7 @@ import {
   toItem,
 } from "./item.ts";
 import { byteOffsetToCharacter, type OffsetEncoding } from "./offset.ts";
+import { isClientAllowed } from "../nvim-lsp/client_filter.ts";
 
 export type Params = {
   /** languageId used to open the scratch buffer (as its 'filetype') and sent with
@@ -26,15 +27,30 @@ export type Params = {
    * default: it is a workaround for servers that answer with unrelated text,
    * and it also discards legitimate items whose label is only a description. */
   enableMatchLabel: boolean;
+  /** Only query Neovim LSP clients whose names are listed. null means all. */
+  allowedServers: string[] | null;
+  /** Never query Neovim LSP clients whose names are listed. Deny wins. */
+  deniedServers: string[] | null;
 };
 
 type CmdlineDoc = { bufnr: number; uri: string };
 
 type Client = {
   id: number;
+  name: string;
   offsetEncoding: OffsetEncoding;
   triggerCharacters: string[];
 };
+
+export function filterCompletionClients(
+  clients: Client[],
+  allowedServers: string[] | null,
+  deniedServers: string[] | null,
+): Client[] {
+  return clients.filter((client) =>
+    isClientAllowed(client.name, allowedServers, deniedServers)
+  );
+}
 
 /** One client's answer: its items, plus whether it wants to be re-queried. */
 type ClientResult = { items: Item[]; isIncomplete: boolean };
@@ -74,11 +90,15 @@ export class Source extends BaseSource<Params> {
         [doc.bufnr, fullLine],
       );
 
-      const clients = await denops.call(
-        "luaeval",
-        `require("ddc_source_nvim_lsp.cmdline").get_clients(_A[1], _A[2])`,
-        [doc.bufnr, sourceParams.languageId],
-      ) as Client[];
+      const clients = filterCompletionClients(
+        await denops.call(
+          "luaeval",
+          `require("ddc_source_nvim_lsp.cmdline").get_clients(_A[1], _A[2])`,
+          [doc.bufnr, sourceParams.languageId],
+        ) as Client[],
+        sourceParams.allowedServers,
+        sourceParams.deniedServers,
+      );
       if (!clients || clients.length === 0) {
         return [];
       }
@@ -188,6 +208,8 @@ export class Source extends BaseSource<Params> {
       languageId: "vim",
       enableDisplayDetail: false,
       enableMatchLabel: false,
+      allowedServers: null,
+      deniedServers: null,
     };
   }
 }

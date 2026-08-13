@@ -10,6 +10,7 @@ local CMDLINE_URI = "untitled://cmdline"
 
 ---@class ddc_source_lsp_cmdline.Client
 ---@field id integer
+---@field name string
 ---@field offsetEncoding string
 ---@field triggerCharacters string[]
 
@@ -116,6 +117,7 @@ function M.get_clients(bufnr, languageId)
         and client.server_capabilities.completionProvider
       table.insert(clients, {
         id = client.id,
+        name = client.name,
         offsetEncoding = client.offset_encoding,
         -- Empty (not nil) so the value survives the round trip through
         -- luaeval as a list rather than vanishing from the table.
