@@ -1,4 +1,5 @@
 import {
+  completionMetadata,
   filterCompletionClients,
   resolveCompletePosition,
   Source,
@@ -35,6 +36,15 @@ Deno.test("cmdline completion position defaults to the keyword boundary", () => 
 
 Deno.test("cmdline completion can replace from the head", () => {
   assertEquals(resolveCompletePosition("head", 4), 0);
+});
+
+Deno.test("cmdline request metadata captures its immutable generation", () => {
+  assertEquals(completionMetadata(3, ":", "command", 5), {
+    generation: 3,
+    cmdType: ":",
+    completionType: "command",
+    completePos: 5,
+  });
 });
 
 Deno.test("cmdline client filtering gives the deny list precedence", () => {

@@ -65,12 +65,30 @@ export function resolveCompletePosition(
   return policy === "head" ? 0 : keywordPosition;
 }
 
+type CompletionMetadata = {
+  generation: number;
+  cmdType: string;
+  completionType: string;
+  completePos: number;
+};
+
+export function completionMetadata(
+  generation: number,
+  cmdType: string,
+  completionType: string,
+  completePos: number,
+): CompletionMetadata {
+  return { generation, cmdType, completionType, completePos };
+}
+
 /** One client's answer: its items, plus whether it wants to be re-queried. */
 type ClientResult = { items: Item[]; isIncomplete: boolean };
 
 const ENCODER = new TextEncoder();
 
 export class Source extends BaseSource<Params> {
+  #generation = 0;
+
   override async getCompletePosition(
     args: GetCompletePositionArguments<Params>,
   ): Promise<number> {
@@ -130,6 +148,16 @@ export class Source extends BaseSource<Params> {
       // before gather() ever runs; there is no unset case to fall back from.
       const timeout = args.sourceOptions.timeout;
       const byteLength = ENCODER.encode(text).length;
+      const cmdType = await fn.getcmdtype(denops);
+      const completionType = await fn.exists(denops, "*getcmdcompltype")
+        ? await denops.call("getcmdcompltype") as string
+        : "";
+      const metadata = completionMetadata(
+        ++this.#generation,
+        cmdType,
+        completionType,
+        args.completePos,
+      );
       const perClient = await Promise.all(
         clients.map((client) =>
           this.#requestCompletion(
@@ -140,6 +168,7 @@ export class Source extends BaseSource<Params> {
             byteLength,
             timeout,
             args.isIncomplete ?? false,
+            metadata,
             {
               line: fullLine,
               suggestCharacter: args.completePos,
@@ -172,6 +201,7 @@ export class Source extends BaseSource<Params> {
     byteLength: number,
     timeout: number,
     isIncomplete: boolean,
+    metadata: CompletionMetadata,
     itemContext: ItemContext,
   ): Promise<ClientResult> {
     try {
@@ -194,6 +224,7 @@ export class Source extends BaseSource<Params> {
               text,
               isIncomplete,
             ),
+            xDdc: metadata,
           },
           timeout,
           doc.bufnr,
