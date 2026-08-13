@@ -290,7 +290,7 @@ is the plugin to manage such buffers. Following is an example setup:
 	      then
 	        return {
 	          sourceParams = {
-	            lsp = { bufnr = otter_attached.buffers[chunk.lang] },
+	            ["nvim-lsp"] = { bufnr = otter_attached.buffers[chunk.lang] },
 	          },
 	        }
 	      end

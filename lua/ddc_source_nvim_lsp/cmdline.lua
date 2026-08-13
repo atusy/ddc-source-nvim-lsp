@@ -15,7 +15,7 @@ function M.buffer_uri(languageId)
   return "untitled://ddc-cmdline/" .. encoded
 end
 
----@class ddc_source_lsp_cmdline.Client
+---@class ddc_source_nvim_lsp.cmdline.Client
 ---@field id integer
 ---@field name string
 ---@field offsetEncoding string
@@ -119,7 +119,7 @@ end
 ---cross-check.
 ---@param bufnr integer
 ---@param languageId string
----@return ddc_source_lsp_cmdline.Client[]
+---@return ddc_source_nvim_lsp.cmdline.Client[]
 function M.get_clients(bufnr, languageId)
   local clients = {}
   for _, client in pairs(vim.lsp.get_clients({ bufnr = bufnr, method = "textDocument/completion" })) do
