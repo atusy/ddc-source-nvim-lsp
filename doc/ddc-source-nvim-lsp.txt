@@ -18,6 +18,11 @@ INTRODUCTION                                     *ddc-source-nvim-lsp-introducti
 
 This source collects items from "nvim-lsp".
 
+The "nvim-lsp-cmdline" source mirrors the command line into a scratch buffer
+and requests completion from Neovim LSP clients attached to the configured
+languageId.  Its requests are synchronous and can block for the ddc source
+timeout, so command-line servers should respond quickly.
+
 
 ==============================================================================
 INSTALL                                               *ddc-source-nvim-lsp-install*
@@ -79,6 +84,25 @@ To take advantage of all the features, you need to set client_capabilities.
 
 ==============================================================================
 PARAMS                                                 *ddc-source-nvim-lsp-params*
+
+The following parameters are specific to "nvim-lsp-cmdline":
+
+                     *ddc-source-nvim-lsp-cmdline-param-languageId*
+languageId		(string)
+		Filetype used for the scratch buffer.  Matching Neovim LSP
+		clients are attached through the user's normal FileType setup.
+
+		Default: "vim"
+
+               *ddc-source-nvim-lsp-cmdline-param-completePosition*
+completePosition	("keyword" | "head")
+		Use ddc's keyword boundary, or replace from the start of the
+		command-line input.  "head" is intended for whole-input providers.
+
+		Default: "keyword"
+
+"nvim-lsp-cmdline" also accepts allowedServers and deniedServers with the
+same exact client.name and null-versus-empty semantics documented below.
 
                                      *ddc-source-nvim-lsp-param-allowedServers*
 allowedServers		(string[] | null)

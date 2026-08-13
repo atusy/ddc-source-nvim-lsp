@@ -57,6 +57,32 @@ empty deny list denies none. If a name occurs in both lists, denial wins. Use
 the names visible to Neovim. A bridge such as kakehashi appears as one client;
 these parameters do not select servers hidden behind it.
 
+### Command-line completion
+
+The `nvim-lsp-cmdline` source mirrors the command line into a scratch buffer
+and requests completion from Neovim LSP clients attached to its `languageId`.
+
+```vim
+call ddc#custom#patch_global('sourceOptions', #{
+      \ 'nvim-lsp-cmdline': #{ mark: 'L', isVolatile: v:true },
+      \ })
+call ddc#custom#patch_global('sourceParams', #{
+      \ 'nvim-lsp-cmdline': #{
+      \   languageId: 'vim',
+      \   allowedServers: v:null,
+      \   deniedServers: v:null,
+      \   completePosition: 'keyword',
+      \ },
+      \ })
+call ddc#custom#patch_filetype('vim', 'sources', ['nvim-lsp-cmdline'])
+```
+
+`allowedServers` and `deniedServers` have the same semantics as the normal
+source. Set `completePosition` to `"head"` for providers that return a whole
+replacement, such as expression and input completion; its default is
+`"keyword"`. Requests currently use Neovim's synchronous LSP API and can block
+for the source `timeout`, so keep local cmdline servers fast.
+
 ## Original code
 
 It based on [cmp-core-example](https://github.com/hrsh7th/cmp-core-example).
