@@ -27,10 +27,8 @@ Please install both "ddc.vim" and "denops.vim".
 https://github.com/Shougo/ddc.vim
 https://github.com/vim-denops/denops.vim
 
-You must set up "nvim-lsp" (neovim builtin lsp client) or "vim-lsp" or
-"lspoints".
-https://github.com/prabirshrestha/vim-lsp
-https://github.com/kuuote/lspoints
+You must set up Neovim's built-in LSP client. Neovim 0.11 or later is
+required.
 
 You also need a snippet plugin if you want to expand snippets in LSP format.
 e.g.
@@ -137,20 +135,6 @@ enableResolveItem	(boolean)
 		NOTE: It must be enabled to enable LSP auto-import feature.
 
 		Default: v:false
-
-                                              *ddc-source-nvim-lsp-param-lspEngine*
-lspEngine		(string)
-		The LSP Engine to use.
-
-		- "nvim-lsp":	Use "nvim-lsp" engine.  It is neovim builtin.
-
-		- "vim-lsp":	Use "vim-lsp" engine.
-				https://github.com/prabirshrestha/vim-lsp
-
-		- "lspoints":	Use "lspoints" engine.  It use "denops.vim".
-				https://github.com/kuuote/lspoints
-
-		Default: "nvim-lsp"
 
                                       *ddc-source-nvim-lsp-param-manualOnlyServers*
 manualOnlyServers		(string[])

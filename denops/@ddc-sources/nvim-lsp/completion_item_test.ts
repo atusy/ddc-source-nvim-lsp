@@ -15,7 +15,6 @@ const params: Params = {
   enableDisplayDetail: false,
   enableMatchLabel: false,
   enableResolveItem: false,
-  lspEngine: "nvim-lsp",
   manualOnlyServers: [],
   snippetEngine: "",
   snippetIndicator: "~",

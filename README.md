@@ -14,13 +14,7 @@ https://github.com/Shougo/ddc.vim
 
 ### LSP client
 
-Supported LSP clients are "nvim-lsp", "vim-lsp" and "lspoints"
-
-https://github.com/prabirshrestha/vim-lsp
-
-https://github.com/kuuote/lspoints
-
-NOTE: If you use "nvim-lsp", it requires Neovim 0.11+.
+This source supports Neovim's built-in LSP client and requires Neovim 0.11+.
 
 ## Configuration
 

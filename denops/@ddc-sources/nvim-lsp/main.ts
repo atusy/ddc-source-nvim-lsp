@@ -30,7 +30,7 @@ export type ConfirmBehavior = "insert" | "replace";
 
 export type UserData = {
   lspitem: string;
-  clientId: number | string;
+  clientId: number;
   offsetEncoding: OffsetEncoding;
   resolvable: boolean;
   // e.g.
@@ -50,7 +50,6 @@ export type Params = {
   enableMatchLabel: boolean;
   enableResolveItem: boolean;
   enableAdditionalTextEdit: boolean;
-  lspEngine: "nvim-lsp" | "vim-lsp" | "lspoints";
   manualOnlyServers: string[];
   snippetEngine:
     | string // ID of denops#callback.
@@ -132,7 +131,6 @@ export class Source extends BaseSource<Params> {
 
     const clients = (await getClients(
       denops,
-      args.sourceParams.lspEngine,
       args.sourceParams.bufnr,
     ).catch(() => [])).filter((client) =>
       args.context.event === "Manual" ||
@@ -211,7 +209,6 @@ export class Source extends BaseSource<Params> {
     try {
       return await request(
         denops,
-        args.sourceParams.lspEngine,
         "textDocument/completion",
         params,
         {
@@ -263,7 +260,6 @@ export class Source extends BaseSource<Params> {
     const lspItem = params.enableResolveItem
       ? await this.#resolve(
         denops,
-        params.lspEngine,
         userData.clientId,
         unresolvedItem,
       )
@@ -312,12 +308,11 @@ export class Source extends BaseSource<Params> {
 
   async #resolve(
     denops: Denops,
-    lspEngine: Params["lspEngine"],
-    clientId: number | string,
+    clientId: number,
     lspItem: LSP.CompletionItem,
     bufnr?: number,
   ): Promise<LSP.CompletionItem> {
-    const clients = await getClients(denops, lspEngine, bufnr);
+    const clients = await getClients(denops, bufnr);
     const client = clients.find((c) => c.id === clientId);
     if (!client?.provider.resolveProvider) {
       return lspItem;
@@ -325,7 +320,6 @@ export class Source extends BaseSource<Params> {
     try {
       const response = await request(
         denops,
-        lspEngine,
         "completionItem/resolve",
         lspItem,
         { client, timeout: 1000, sync: true, bufnr: bufnr },
@@ -358,7 +352,6 @@ export class Source extends BaseSource<Params> {
     const unresolvedItem = JSON.parse(userData.lspitem) as LSP.CompletionItem;
     const lspItem = await this.#resolve(
       denops,
-      params.lspEngine,
       userData.clientId,
       unresolvedItem,
       params.bufnr,
@@ -471,7 +464,6 @@ export class Source extends BaseSource<Params> {
       enableDisplayDetail: false,
       enableMatchLabel: false,
       enableResolveItem: false,
-      lspEngine: "nvim-lsp",
       manualOnlyServers: [],
       snippetEngine: "",
       snippetIndicator: "~",

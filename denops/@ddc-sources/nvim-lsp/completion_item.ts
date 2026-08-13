@@ -48,7 +48,7 @@ export class CompletionItem {
     25: "TypeParameter",
   } as const satisfies Record<LSP.CompletionItemKind, string>;
 
-  #clientId: number | string;
+  #clientId: number;
   #offsetEncoding: OffsetEncoding;
   #resolvable: boolean;
   #lineOnRequest: string;
@@ -225,7 +225,7 @@ export class CompletionItem {
 
   static async #executeCommand(
     denops: Denops,
-    clientId: number | string,
+    clientId: number,
     command: LSP.Command | undefined,
   ): Promise<void> {
     if (command) {
@@ -238,7 +238,7 @@ export class CompletionItem {
   }
 
   constructor(
-    clientId: number | string,
+    clientId: number,
     offsetEncoding: OffsetEncoding,
     resolvable: boolean,
     lineOnRequest: string,
