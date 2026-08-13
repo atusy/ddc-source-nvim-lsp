@@ -223,6 +223,8 @@ export type ItemContext = {
   line: string;
   /** Index in `line` where ddc splices the word in (its completePos). */
   suggestCharacter: number;
+  /** Cursor index in `line`; ddc cannot delete an edit range after it. */
+  requestCharacter?: number;
   /** positionEncoding of the client that produced the item. */
   offsetEncoding: OffsetEncoding;
   enableDisplayDetail?: boolean;
@@ -306,7 +308,13 @@ export function toItem(
 ): Item | null {
   if (lspItem.textEdit) {
     const { start, end } = editRangeOf(lspItem.textEdit);
-    if (start.line !== 0 || end.line !== 0) {
+    const requestCharacter = ctx.requestCharacter ?? ctx.line.length;
+    const endIndex = toUtf16Index(
+      ctx.line,
+      end.character,
+      ctx.offsetEncoding,
+    );
+    if (start.line !== 0 || end.line !== 0 || endIndex > requestCharacter) {
       return null;
     }
   }

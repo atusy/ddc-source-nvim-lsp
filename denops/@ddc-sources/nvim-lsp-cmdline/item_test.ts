@@ -559,3 +559,24 @@ Deno.test("normalizeCompletionResult - drops a malformed textEdit, keeps the ite
     { label: "d" },
   ]);
 });
+
+Deno.test("toItem - drops an edit that replaces text after the cursor", () => {
+  assertEquals(
+    toItem({
+      label: "fooBaz",
+      textEdit: {
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 6 },
+        },
+        newText: "fooBaz",
+      },
+    }, {
+      ...CTX,
+      line: "foobar",
+      suggestCharacter: 0,
+      requestCharacter: 3,
+    }),
+    null,
+  );
+});
