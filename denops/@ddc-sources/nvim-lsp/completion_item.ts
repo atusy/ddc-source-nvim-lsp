@@ -48,7 +48,7 @@ export class CompletionItem {
     25: "TypeParameter",
   } as const satisfies Record<LSP.CompletionItemKind, string>;
 
-  #clientId: number | string;
+  #clientId: number;
   #offsetEncoding: OffsetEncoding;
   #resolvable: boolean;
   #lineOnRequest: string;
@@ -225,20 +225,20 @@ export class CompletionItem {
 
   static async #executeCommand(
     denops: Denops,
-    clientId: number | string,
+    clientId: number,
     command: LSP.Command | undefined,
   ): Promise<void> {
     if (command) {
       await denops.call(
         "luaeval",
-        `require("ddc_source_lsp.internal").execute(_A[1], _A[2])`,
+        `require("ddc_source_nvim_lsp.internal").execute(_A[1], _A[2])`,
         [clientId, command],
       );
     }
   }
 
   constructor(
-    clientId: number | string,
+    clientId: number,
     offsetEncoding: OffsetEncoding,
     resolvable: boolean,
     lineOnRequest: string,
@@ -413,7 +413,7 @@ export class CompletionItem {
         ? [{
           type: "abbr",
           // NOTE: The property 'name' only makes sense in Vim.
-          name: `ddc-source-lsp-deprecated`,
+          name: `ddc-source-nvim-lsp-deprecated`,
           hl_group: "DdcLspDeprecated",
           col: 1,
           width: byteLength(abbr),

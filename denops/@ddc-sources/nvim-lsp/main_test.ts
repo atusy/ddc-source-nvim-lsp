@@ -1,4 +1,4 @@
-import { byteOffsetToCharacter } from "./main.ts";
+import { byteOffsetToCharacter, Source } from "./main.ts";
 
 import { assertEquals } from "@std/assert/equals";
 
@@ -46,4 +46,15 @@ Deno.test("byteOffsetToCharacter - surrogate pairs, utf-32", () => {
   const line = "😀!";
   assertEquals(byteOffsetToCharacter(line, 4, "utf-32"), 1); // after 😀 = 1 code point
   assertEquals(byteOffsetToCharacter(line, 5, "utf-32"), 2); // after 😀!
+});
+
+Deno.test("nvim-lsp source has no client-engine selector", () => {
+  const params = new Source().params();
+  assertEquals("lspEngine" in params, false);
+});
+
+Deno.test("server filters default to unrestricted null values", () => {
+  const params = new Source().params();
+  assertEquals(params.allowedServers, null);
+  assertEquals(params.deniedServers, null);
 });

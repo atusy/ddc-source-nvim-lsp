@@ -6,8 +6,14 @@ import {
   uriFromBufnr,
 } from "./deps/lsp.ts";
 import { CompletionItem } from "./completion_item.ts";
+import {
+  collectClientItems,
+  convertCompletionItems,
+  normalizeCompletionResult,
+} from "./completion_result.ts";
 import { request } from "./request.ts";
 import { type Client, getClients } from "./client.ts";
+import { isClientAllowed } from "./client_filter.ts";
 
 import type { DdcGatherItems, Previewer } from "@shougo/ddc-vim/types";
 import {
@@ -25,12 +31,15 @@ import { ensure } from "@core/unknownutil/ensure";
 import { is } from "@core/unknownutil/is";
 
 type Result = LSP.CompletionList | LSP.CompletionItem[];
+type CancelableGatherArguments = GatherArguments<Params> & {
+  signal?: AbortSignal;
+};
 
 export type ConfirmBehavior = "insert" | "replace";
 
 export type UserData = {
   lspitem: string;
-  clientId: number | string;
+  clientId: number;
   offsetEncoding: OffsetEncoding;
   resolvable: boolean;
   // e.g.
@@ -45,18 +54,19 @@ export type UserData = {
 };
 
 export type Params = {
+  allowedServers: string[] | null;
   confirmBehavior: ConfirmBehavior;
   enableDisplayDetail: boolean;
   enableMatchLabel: boolean;
   enableResolveItem: boolean;
   enableAdditionalTextEdit: boolean;
-  lspEngine: "nvim-lsp" | "vim-lsp" | "lspoints";
   manualOnlyServers: string[];
   snippetEngine:
     | string // ID of denops#callback.
     | ((body: string) => Promise<void>);
   snippetIndicator: string;
   bufnr?: number;
+  deniedServers: string[] | null;
 };
 
 function isDefined<T>(x: T | undefined): x is T {
@@ -116,13 +126,23 @@ function createCompletionContext(
 }
 
 export class Source extends BaseSource<Params> {
+  #gatherController?: AbortController;
+
   override async gather(
-    args: GatherArguments<Params>,
+    args: CancelableGatherArguments,
   ): Promise<DdcGatherItems<UserData>> {
+    this.#gatherController?.abort();
+    this.#gatherController = new AbortController();
+    args = {
+      ...args,
+      signal: args.signal
+        ? AbortSignal.any([args.signal, this.#gatherController.signal])
+        : this.#gatherController.signal,
+    };
     const denops = args.denops;
 
     if (denops.meta.host === "nvim" && !await fn.has(denops, "nvim-0.11")) {
-      this.#printError(denops, "ddc-source-lsp requires Neovim 0.11+.");
+      this.#printError(denops, "ddc-source-nvim-lsp requires Neovim 0.11+.");
       return [];
     }
 
@@ -132,17 +152,27 @@ export class Source extends BaseSource<Params> {
 
     const clients = (await getClients(
       denops,
-      args.sourceParams.lspEngine,
       args.sourceParams.bufnr,
     ).catch(() => [])).filter((client) =>
-      args.context.event === "Manual" ||
-      !args.sourceParams.manualOnlyServers.includes(client.name)
+      isClientAllowed(
+        client.name,
+        args.sourceParams.allowedServers,
+        args.sourceParams.deniedServers,
+      ) &&
+      (args.context.event === "Manual" ||
+        !args.sourceParams.manualOnlyServers.includes(client.name))
     );
 
-    const items = await Promise.all(clients.map(async (client) => {
+    const tasks = clients.map(async (client) => {
       const result = await this.#request(denops, client, args);
       if (!result) {
         return [];
+      }
+      const completionList = normalizeCompletionResult(result);
+      if (!completionList) {
+        throw new Error(
+          `invalid completion response: client=${client.name}(${client.id})`,
+        );
       }
 
       const completionItem = new CompletionItem(
@@ -156,25 +186,24 @@ export class Source extends BaseSource<Params> {
         args.sourceParams.snippetIndicator,
       );
 
-      const completionList = Array.isArray(result)
-        ? { items: result, isIncomplete: false }
-        : result;
-      const items = completionList.items.map((lspItem: LSP.CompletionItem) =>
-        completionItem.toDdcItem(
-          lspItem,
-          completionList.itemDefaults,
-          args.sourceParams.enableDisplayDetail,
-          args.sourceParams.enableMatchLabel,
-        )
+      const items = convertCompletionItems(
+        completionList.items,
+        (lspItem) =>
+          completionItem.toDdcItem(
+            lspItem as LSP.CompletionItem,
+            completionList.itemDefaults,
+            args.sourceParams.enableDisplayDetail,
+            args.sourceParams.enableMatchLabel,
+          ),
       ).filter(isDefined);
       isIncomplete = isIncomplete || completionList.isIncomplete;
 
       return items;
-    })).then((items) => items.flat(1))
-      .catch((e) => {
-        this.#printError(denops, e);
-        return [];
-      });
+    });
+    const items = await collectClientItems(
+      tasks,
+      (error) => this.#printError(denops, error as Error),
+    );
 
     return {
       items,
@@ -185,7 +214,7 @@ export class Source extends BaseSource<Params> {
   async #request(
     denops: Denops,
     client: Client,
-    args: GatherArguments<Params>,
+    args: CancelableGatherArguments,
   ): Promise<Result | undefined> {
     const bufnr = args.sourceParams.bufnr ?? await fn.bufnr(denops);
     const uri = await uriFromBufnr(denops, bufnr);
@@ -211,7 +240,6 @@ export class Source extends BaseSource<Params> {
     try {
       return await request(
         denops,
-        args.sourceParams.lspEngine,
         "textDocument/completion",
         params,
         {
@@ -219,19 +247,19 @@ export class Source extends BaseSource<Params> {
           timeout: args.sourceOptions.timeout,
           sync: false,
           bufnr: args.sourceParams.bufnr,
+          signal: args.signal,
         },
       ) as Result;
     } catch (e) {
       if (e instanceof DOMException) {
         return;
       }
-      await this.#printError(
-        denops,
-        `completion request failed: client=${client.name}(${client.id}), error=${
+      throw new Error(
+        `completion request failed: client=${client.name}(${client.id}), cause=${
           e instanceof Error ? e.message : String(e)
         }`,
+        { cause: e },
       );
-      throw e;
     }
   }
 
@@ -242,7 +270,7 @@ export class Source extends BaseSource<Params> {
     await denops.call(
       `ddc#util#print_error`,
       message.toString(),
-      "ddc-source-lsp",
+      "ddc-source-nvim-lsp",
     );
   }
 
@@ -263,9 +291,10 @@ export class Source extends BaseSource<Params> {
     const lspItem = params.enableResolveItem
       ? await this.#resolve(
         denops,
-        params.lspEngine,
         userData.clientId,
         unresolvedItem,
+        params.allowedServers,
+        params.deniedServers,
       )
       : unresolvedItem;
 
@@ -312,12 +341,15 @@ export class Source extends BaseSource<Params> {
 
   async #resolve(
     denops: Denops,
-    lspEngine: Params["lspEngine"],
-    clientId: number | string,
+    clientId: number,
     lspItem: LSP.CompletionItem,
+    allowedServers: string[] | null,
+    deniedServers: string[] | null,
     bufnr?: number,
   ): Promise<LSP.CompletionItem> {
-    const clients = await getClients(denops, lspEngine, bufnr);
+    const clients = (await getClients(denops, bufnr)).filter((client) =>
+      isClientAllowed(client.name, allowedServers, deniedServers)
+    );
     const client = clients.find((c) => c.id === clientId);
     if (!client?.provider.resolveProvider) {
       return lspItem;
@@ -325,7 +357,6 @@ export class Source extends BaseSource<Params> {
     try {
       const response = await request(
         denops,
-        lspEngine,
         "completionItem/resolve",
         lspItem,
         { client, timeout: 1000, sync: true, bufnr: bufnr },
@@ -358,9 +389,10 @@ export class Source extends BaseSource<Params> {
     const unresolvedItem = JSON.parse(userData.lspitem) as LSP.CompletionItem;
     const lspItem = await this.#resolve(
       denops,
-      params.lspEngine,
       userData.clientId,
       unresolvedItem,
+      params.allowedServers,
+      params.deniedServers,
       params.bufnr,
     );
     const filetype = await op.filetype.get(denops);
@@ -466,12 +498,13 @@ export class Source extends BaseSource<Params> {
 
   override params(): Params {
     return {
+      allowedServers: null,
       confirmBehavior: "insert",
       enableAdditionalTextEdit: false,
       enableDisplayDetail: false,
       enableMatchLabel: false,
       enableResolveItem: false,
-      lspEngine: "nvim-lsp",
+      deniedServers: null,
       manualOnlyServers: [],
       snippetEngine: "",
       snippetIndicator: "~",
