@@ -355,6 +355,53 @@ Deno.test("toItem - uses insertText when insertTextFormat is plain text", () => 
   );
 });
 
+Deno.test("toItem - textEdit newText is authoritative for plain text", () => {
+  assertEquals(
+    toItem({
+      label: "display",
+      insertText: "fallback",
+      textEdit: {
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 0 },
+        },
+        newText: "actual",
+      },
+    }, CTX),
+    { word: "actual", abbr: "display", kind: "Text", menu: "" },
+  );
+});
+
+Deno.test("toItem - itemDefaults textEditText controls inserted text", () => {
+  const [item] = normalizeCompletionResult({
+    items: [{ label: "display", textEditText: "actual" }],
+    itemDefaults: {
+      editRange: {
+        start: { line: 0, character: 0 },
+        end: { line: 0, character: 0 },
+      },
+    },
+  });
+  assertEquals(toItem(item, CTX)?.word, "actual");
+});
+
+Deno.test("toItem - snippet textEdit falls back to the safe label", () => {
+  assertEquals(
+    toItem({
+      label: "getbufline(...)",
+      insertTextFormat: 2,
+      textEdit: {
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 0 },
+        },
+        newText: "getbufline(${1:buf})",
+      },
+    }, CTX)?.word,
+    "getbufline(...)",
+  );
+});
+
 Deno.test("normalizeCompletionResult - drops a non-string insertText, falls back to label", () => {
   const items = [{ label: "ok", insertText: 42 }] as unknown as {
     label: string;

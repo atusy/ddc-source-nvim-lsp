@@ -315,11 +315,9 @@ export function toItem(
   // than inserting literal placeholder syntax.
   // The label is display text and may be padded or decorated; trim it, as
   // ddc-source-lsp does, before it becomes inserted text.
-  // NOTE: a textEdit contributes its range here, not its newText, which may
-  // be a snippet -- and nothing in the cmdline expands one.
   const text = lspItem.insertTextFormat === INSERT_TEXT_FORMAT_SNIPPET
     ? lspItem.label.trim()
-    : lspItem.insertText ?? lspItem.label.trim();
+    : lspItem.textEdit?.newText ?? lspItem.insertText ?? lspItem.label.trim();
   const word = toWord(lspItem, text, ctx);
   if (ctx.enableMatchLabel && !word.includes(pureLabel(lspItem.label))) {
     return null;
