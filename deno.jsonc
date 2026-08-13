@@ -9,7 +9,7 @@
     "pre-commit": "deno task fmt && deno task check && deno task test",
     "test": "deno test -A --doc --parallel --shuffle denops/**/*.ts",
     "test:lua": "nvim --headless --noplugin -u tests/minimal_init.lua -c \"lua MiniTest.run()\"",
-    "test:publish": "deno publish --dry-run --allow-dirty --set-version 0.0.0",
+    "test:publish": "deno publish --dry-run --allow-dirty --set-version 0.0.0 --config denops/@ddc-sources/nvim-lsp/deno.json && deno publish --dry-run --allow-dirty --set-version 0.0.0 --config denops/@ddc-sources/nvim-lsp-cmdline/deno.json",
     "update": "deno outdated --recursive",
     "upgrade": "deno outdated --recursive --update"
   },

@@ -17,7 +17,7 @@ import {
   toItem,
 } from "./item.ts";
 import { byteOffsetToCharacter, type OffsetEncoding } from "./offset.ts";
-import { isClientAllowed } from "../nvim-lsp/client_filter.ts";
+import { isClientAllowed } from "./client_filter.ts";
 
 export type Params = {
   /** languageId used to open the scratch buffer (as its 'filetype') and sent with
