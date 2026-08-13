@@ -122,7 +122,7 @@ export class Source extends BaseSource<Params> {
     const denops = args.denops;
 
     if (denops.meta.host === "nvim" && !await fn.has(denops, "nvim-0.11")) {
-      this.#printError(denops, "ddc-source-lsp requires Neovim 0.11+.");
+      this.#printError(denops, "ddc-source-nvim-lsp requires Neovim 0.11+.");
       return [];
     }
 
@@ -242,7 +242,7 @@ export class Source extends BaseSource<Params> {
     await denops.call(
       `ddc#util#print_error`,
       message.toString(),
-      "ddc-source-lsp",
+      "ddc-source-nvim-lsp",
     );
   }
 

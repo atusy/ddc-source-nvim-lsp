@@ -51,6 +51,10 @@ jobs:
         with:
           repository: "vim-denops/denops.vim"
           path: "./denops.vim"
+      - uses: actions/checkout@v6
+        with:
+          repository: "nvim-mini/mini.nvim"
+          path: "./mini.nvim"
       - uses: denoland/setup-deno@v2
         with:
           deno-version: ${{ env.DENO_VERSION }}
@@ -62,4 +66,9 @@ jobs:
         run: deno task test
         env:
           DENOPS_TEST_DENOPS_PATH: "../denops.vim"
+        working-directory: ./repo
+      - name: Test Lua
+        run: deno task test:lua
+        env:
+          MINI_TEST_PATH: "../mini.nvim"
         working-directory: ./repo

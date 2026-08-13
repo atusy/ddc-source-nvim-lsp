@@ -59,7 +59,7 @@ end
 ---@param err unknown
 local function notify_request_error(method, err)
   vim.notify(
-    ("ddc_source_lsp: request error (%s): %s"):format(
+    ("ddc_source_nvim_lsp: request error (%s): %s"):format(
       method,
       format_error(err)
     ),

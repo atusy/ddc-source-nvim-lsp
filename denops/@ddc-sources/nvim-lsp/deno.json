@@ -1,5 +1,5 @@
 {
-  "name": "@shougo/ddc-source-lsp",
+  "name": "@shougo/ddc-source-nvim-lsp",
   "exports": {
     ".": "./main.ts",
     "./completion_item": "./completion_item.ts"

@@ -34,7 +34,7 @@ async function requestWithNvimLsp(
   if (opts.sync) {
     return await denops.call(
       `luaeval`,
-      `require("ddc_source_lsp.internal").request_sync(_A[1], _A[2], _A[3], _A[4])`,
+      `require("ddc_source_nvim_lsp.internal").request_sync(_A[1], _A[2], _A[3], _A[4])`,
       [
         opts.client.id,
         method,
@@ -52,7 +52,7 @@ async function requestWithNvimLsp(
   );
   await denops.call(
     `luaeval`,
-    `require("ddc_source_lsp.internal").request(_A[1], _A[2], _A[3], _A[4])`,
+    `require("ddc_source_nvim_lsp.internal").request(_A[1], _A[2], _A[3], _A[4])`,
     [opts.client.id, method, params, {
       plugin_name: denops.name,
       lambda_id,

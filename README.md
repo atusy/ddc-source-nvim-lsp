@@ -1,4 +1,4 @@
-# ddc-source-lsp
+# ddc-source-nvim-lsp
 
 lsp completion for ddc.vim
 
@@ -28,7 +28,7 @@ To take advantage of all the features, you need to set client_capabilities.
 
 ```lua
 vim.lsp.config('*', {
-  capabilities = require("ddc_source_lsp").make_client_capabilities(),
+  capabilities = require("ddc_source_nvim_lsp").make_client_capabilities(),
 })
 ```
 

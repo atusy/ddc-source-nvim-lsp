@@ -20,7 +20,7 @@ export async function getClients(
   if (lspEngine === "nvim-lsp") {
     return await denops.call(
       "luaeval",
-      `require("ddc_source_lsp.internal").get_clients(_A[1])`,
+      `require("ddc_source_nvim_lsp.internal").get_clients(_A[1])`,
       [bufnr],
     ) as Client[];
   } else if (lspEngine === "vim-lsp") {

@@ -1,26 +1,26 @@
-*ddc-source-lsp.txt*				lsp completion for ddc.vim
+*ddc-source-nvim-lsp.txt*				lsp completion for ddc.vim
 
 Authors: Shougo <Shougo.Matsu at gmail.com>
          uga-rosa <uga6603 at gmail.com>
 License: MIT license
 
-CONTENTS                                             *ddc-source-lsp-contents*
+CONTENTS                                             *ddc-source-nvim-lsp-contents*
 
-Introduction					|ddc-source-lsp-introduction|
-Install						|ddc-source-lsp-install|
-Examples					|ddc-source-lsp-examples|
-Params						|ddc-source-lsp-params|
-FAQ						|ddc-source-lsp-faq|
+Introduction					|ddc-source-nvim-lsp-introduction|
+Install						|ddc-source-nvim-lsp-install|
+Examples					|ddc-source-nvim-lsp-examples|
+Params						|ddc-source-nvim-lsp-params|
+FAQ						|ddc-source-nvim-lsp-faq|
 
 
 ==============================================================================
-INTRODUCTION                                     *ddc-source-lsp-introduction*
+INTRODUCTION                                     *ddc-source-nvim-lsp-introduction*
 
 This source collects items from "nvim-lsp".
 
 
 ==============================================================================
-INSTALL                                               *ddc-source-lsp-install*
+INSTALL                                               *ddc-source-nvim-lsp-install*
 
 Please install both "ddc.vim" and "denops.vim".
 
@@ -49,13 +49,13 @@ https://github.com/uga-rosa/ddc-previewer-floating
 
 
 ==============================================================================
-EXAMPLES                                             *ddc-source-lsp-examples*
+EXAMPLES                                             *ddc-source-nvim-lsp-examples*
 
 To take advantage of all the features, you need to set client_capabilities.
 
 >lua
 	vim.lsp.config('*', {
-	  capabilities = require("ddc_source_lsp").make_client_capabilities(),
+	  capabilities = require("ddc_source_nvim_lsp").make_client_capabilities(),
 	})
 <
 >vim
@@ -80,20 +80,20 @@ To take advantage of all the features, you need to set client_capabilities.
 <
 
 ==============================================================================
-PARAMS                                                 *ddc-source-lsp-params*
+PARAMS                                                 *ddc-source-nvim-lsp-params*
 
-                                                  *ddc-source-lsp-param-bufnr*
+                                                  *ddc-source-nvim-lsp-param-bufnr*
 bufnr			(number | v:null)
 		- number:	the number of a buffer
 		- v:null:	the current buffer
 
 		Specify the buffer to be used in requests to the language
 		server. Needs not be set for normal use. see FAQ
-		(|ddc-source-lsp-faq-markdown-codeblocks|).
+		(|ddc-source-nvim-lsp-faq-markdown-codeblocks|).
 
 		Default: v:null
 
-                                        *ddc-source-lsp-param-confirmBehavior*
+                                        *ddc-source-nvim-lsp-param-confirmBehavior*
 confirmBehavior		("insert" | "replace")
 		- "insert":	Inserts the selected item and moves adjacent
 				text to the right.
@@ -101,19 +101,19 @@ confirmBehavior		("insert" | "replace")
 
 		Default: "insert"
 
-                               *ddc-source-lsp-param-enableAdditionalTextEdit*
+                               *ddc-source-nvim-lsp-param-enableAdditionalTextEdit*
 enableAdditionalTextEdit	(boolean)
 		Enable supplementary editing apart from the cursor. For
 		instance, it allows the auto-import of the
 		typescript-language-server, as well as macro-expansion via
 		rust-analyzer.
 		NOTE: To use this feature,
-		|ddc-source-lsp-param-enableResolveItem| must be
+		|ddc-source-nvim-lsp-param-enableResolveItem| must be
 		|v:true|.
 
 		Default: v:false
 
-                                    *ddc-source-lsp-param-enableDisplayDetail*
+                                    *ddc-source-nvim-lsp-param-enableDisplayDetail*
 enableDisplayDetail		(boolean)
 		Set the detailed text in |ddc-item-attribute-menu| if
 		possible.
@@ -122,7 +122,7 @@ enableDisplayDetail		(boolean)
 
 		Default: v:false
 
-                                       *ddc-source-lsp-param-enableMatchLabel*
+                                       *ddc-source-nvim-lsp-param-enableMatchLabel*
 enableMatchLabel		(boolean)
 		If it is enabled, item's |ddc-item-attribute-word| must be
 		matched to LSP "label".
@@ -130,7 +130,7 @@ enableMatchLabel		(boolean)
 
 		Default: v:false
 
-                                      *ddc-source-lsp-param-enableResolveItem*
+                                      *ddc-source-nvim-lsp-param-enableResolveItem*
 enableResolveItem	(boolean)
 		Enable LSP's "completionItem/resolve" feature when the item is
 		confirmed.
@@ -138,7 +138,7 @@ enableResolveItem	(boolean)
 
 		Default: v:false
 
-                                              *ddc-source-lsp-param-lspEngine*
+                                              *ddc-source-nvim-lsp-param-lspEngine*
 lspEngine		(string)
 		The LSP Engine to use.
 
@@ -152,14 +152,14 @@ lspEngine		(string)
 
 		Default: "nvim-lsp"
 
-                                      *ddc-source-lsp-param-manualOnlyServers*
+                                      *ddc-source-nvim-lsp-param-manualOnlyServers*
 manualOnlyServers		(string[])
 		The LSP server names to use manual completion only.
 		It is useful if the server is very slow performance.
 
 		Default: []
 
-                                          *ddc-source-lsp-param-snippetEngine*
+                                          *ddc-source-nvim-lsp-param-snippetEngine*
 snippetEngine		(string | function)
 		The language server may return snippet as items, so work with
 		another plugin to expand it. Register with
@@ -189,7 +189,7 @@ snippetEngine		(string | function)
 <
 		Default: ""
 
-                                       *ddc-source-lsp-param-snippetIndicator*
+                                       *ddc-source-nvim-lsp-param-snippetIndicator*
 snippetIndicator	(string)
 		The indicator string for snippet items added to the end of
 		a completion item.
@@ -199,9 +199,9 @@ snippetIndicator	(string)
 		Default: "~"
 
 ==============================================================================
-FREQUENTLY ASKED QUESTIONS (FAQ)                          *ddc-source-lsp-faq*
+FREQUENTLY ASKED QUESTIONS (FAQ)                          *ddc-source-nvim-lsp-faq*
 
-                                       *ddc-source-lsp-faq-snippet-is-doubled*
+                                       *ddc-source-nvim-lsp-faq-snippet-is-doubled*
 Q: The snippet is double expanded.
 
 A: Remove "vim-vsnip-integ" and use "ddc-source-vsnip" instead.
@@ -210,18 +210,18 @@ remove it completely from 'runtimepath'.
 
 https://github.com/uga-rosa/ddc-source-vsnip
 
-                                      *ddc-source-lsp-faq-items-not-displayed*
+                                      *ddc-source-nvim-lsp-faq-items-not-displayed*
 Q: The items are not displayed.
 
 A: You have enabled LSP snippet by "snippetSupport" in lspconfig.
 If you want to complete snippet items, you must configure
-|ddc-source-lsp-param-snippetEngine|. Otherwise, they are filtered.
+|ddc-source-nvim-lsp-param-snippetEngine|. Otherwise, they are filtered.
 
-                                      *ddc-source-lsp-faq-markdown-codeblocks*
+                                      *ddc-source-nvim-lsp-faq-markdown-codeblocks*
 Q: How to enable completions in markdown codeblocks?
 
 A: Use |ddc#custom#set_context_filetype()| and conditionally set the number of
-a virtual buffer to |ddc-source-lsp-param-bufnr|. The virtual buffer should
+a virtual buffer to |ddc-source-nvim-lsp-param-bufnr|. The virtual buffer should
 synchronize its content with the codeblock and should have an attached
 language server. In Neovim, otter.nvim (https://github.com/jmbuhr/otter.nvim)
 is the plugin to manage such buffers. Following is an example setup:

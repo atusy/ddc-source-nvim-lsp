@@ -1,7 +1,7 @@
-if exists('g:loaded_ddc_source_lsp')
+if exists('g:loaded_ddc_source_nvim_lsp')
   finish
 endif
-let g:loaded_ddc_source_lsp = 1
+let g:loaded_ddc_source_nvim_lsp = 1
 
 function s:set_default_highlight() abort
   highlight default DdcLspDeprecated
@@ -12,7 +12,7 @@ call s:set_default_highlight()
 
 " Cleared default highlights without link when applying colorscheme
 " so redefine it.
-augroup ddc-source-lsp
+augroup ddc-source-nvim-lsp
   autocmd!
   autocmd ColorScheme * call <SID>set_default_highlight()
 augroup END
