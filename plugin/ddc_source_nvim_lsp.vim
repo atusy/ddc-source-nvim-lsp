@@ -6,6 +6,8 @@ let g:loaded_ddc_source_nvim_lsp = 1
 function s:set_default_highlight() abort
   highlight default DdcLspDeprecated
         \ term=strikethrough cterm=strikethrough gui=strikethrough
+  highlight default DdcLspCmdlineDeprecated
+        \ term=strikethrough cterm=strikethrough gui=strikethrough
 endfunction
 
 call s:set_default_highlight()

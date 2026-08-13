@@ -1,0 +1,16 @@
+{
+  "name": "@atusy/ddc-source-nvim-lsp-cmdline",
+  "exports": {
+    ".": "./main.ts"
+  },
+  "publish": {
+    "include": [
+      "**/*.ts"
+    ]
+  },
+  "imports": {
+    "@denops/std": "jsr:@denops/std@~8.2.0",
+    "@shougo/ddc-vim": "jsr:@shougo/ddc-vim@~10.3.0",
+    "@std/assert": "jsr:@std/assert@~1.0.3"
+  }
+}
