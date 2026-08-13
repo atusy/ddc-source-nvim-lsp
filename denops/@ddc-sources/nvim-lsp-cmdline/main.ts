@@ -2,8 +2,9 @@ import {
   BaseSource,
   type GatherArguments,
   type GetCompletePositionArguments,
+  type GetPreviewerArguments,
 } from "@shougo/ddc-vim/source";
-import type { DdcGatherItems, Item } from "@shougo/ddc-vim/types";
+import type { DdcGatherItems, Item, Previewer } from "@shougo/ddc-vim/types";
 import type { Denops } from "@denops/std";
 
 import * as fn from "@denops/std/function";
@@ -81,6 +82,10 @@ export function completionMetadata(
   return { generation, cmdType, completionType, completePos };
 }
 
+export function helpPreview(word: string, tags: string[]): Previewer {
+  return tags.length === 0 ? { kind: "empty" } : { kind: "help", tag: word };
+}
+
 /** One client's answer: its items, plus whether it wants to be re-queried. */
 type ClientResult = { items: Item[]; isIncomplete: boolean };
 
@@ -97,6 +102,17 @@ export class Source extends BaseSource<Params> {
       args.sourceParams.completePosition,
       keywordPosition,
     );
+  }
+
+  override async getPreviewer(
+    args: GetPreviewerArguments<Params>,
+  ): Promise<Previewer> {
+    const tags = await fn.getcompletion(
+      args.denops,
+      args.item.word,
+      "help",
+    ) as string[];
+    return helpPreview(args.item.word, tags);
   }
 
   override async gather(

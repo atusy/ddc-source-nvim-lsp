@@ -1,6 +1,7 @@
 import {
   completionMetadata,
   filterCompletionClients,
+  helpPreview,
   resolveCompletePosition,
   Source,
 } from "./main.ts";
@@ -45,6 +46,14 @@ Deno.test("cmdline request metadata captures its immutable generation", () => {
     completionType: "command",
     completePos: 5,
   });
+});
+
+Deno.test("help preview opens only an existing help tag", () => {
+  assertEquals(helpPreview("lua-guide", ["lua-guide"]), {
+    kind: "help",
+    tag: "lua-guide",
+  });
+  assertEquals(helpPreview("missing", []), { kind: "empty" });
 });
 
 Deno.test("cmdline client filtering gives the deny list precedence", () => {
