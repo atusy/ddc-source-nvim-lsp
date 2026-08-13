@@ -49,6 +49,10 @@ export async function request(
     );
   }
 
+  if (opts.signal?.aborted) {
+    throw abortError(opts.signal);
+  }
+
   const waiter = Promise.withResolvers<RequestResult>();
   const callback = lambda.add(denops, (res: unknown) => {
     waiter.resolve(res as RequestResult);

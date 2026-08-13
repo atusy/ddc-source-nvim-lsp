@@ -17,6 +17,7 @@ function fakeDenops(
 ) {
   const dispatcher: Record<string, (...args: unknown[]) => unknown> = {};
   const cancelled: number[] = [];
+  let started = 0;
   const denops = {
     name: "test",
     dispatcher,
@@ -25,10 +26,18 @@ function fakeDenops(
         cancelled.push((args as [number, number])[1]);
         return Promise.resolve(true);
       }
+      started++;
       return Promise.resolve(start);
     },
   } as unknown as Denops;
-  return { denops, dispatcher, cancelled };
+  return {
+    denops,
+    dispatcher,
+    cancelled,
+    get started() {
+      return started;
+    },
+  };
 }
 
 Deno.test("request releases its callback after a successful response", async () => {
@@ -77,6 +86,23 @@ Deno.test("request cancellation reaches Neovim and releases its callback", async
 
   await assertRejects(() => pending, DOMException, "aborted");
   assertEquals(fake.cancelled, [42]);
+  assertEquals(Object.keys(fake.dispatcher), []);
+});
+
+Deno.test("an already aborted request never reaches Neovim", async () => {
+  const fake = fakeDenops({ ok: true, request_id: 42 });
+  const controller = new AbortController();
+  controller.abort();
+
+  await assertRejects(() =>
+    request(fake.denops, "textDocument/completion", {}, {
+      client,
+      timeout: 5_000,
+      sync: false,
+      signal: controller.signal,
+    })
+  );
+  assertEquals(fake.started, 0);
   assertEquals(Object.keys(fake.dispatcher), []);
 });
 
