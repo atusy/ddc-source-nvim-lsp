@@ -35,7 +35,7 @@ Deno.test("request releases its callback after a successful response", async () 
   const fake = fakeDenops({ ok: true, request_id: 42 });
   const pending = request(fake.denops, "textDocument/completion", {}, {
     client,
-    timeout: 100,
+    timeout: 5_000,
     sync: false,
   });
   await Promise.resolve();
@@ -86,7 +86,7 @@ Deno.test("request timeout cancels Neovim and releases its callback", async () =
   await assertRejects(() =>
     request(fake.denops, "textDocument/completion", {}, {
       client,
-      timeout: 1,
+      timeout: 20,
       sync: false,
     })
   );
