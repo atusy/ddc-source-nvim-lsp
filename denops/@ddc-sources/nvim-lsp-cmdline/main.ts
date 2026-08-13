@@ -88,6 +88,10 @@ export function helpPreview(word: string, tags: string[]): Previewer {
   return tags.length === 0 ? { kind: "empty" } : { kind: "help", tag: word };
 }
 
+export function remainingTimeout(deadline: number, now = Date.now()): number {
+  return Math.max(0, deadline - now);
+}
+
 /** One client's answer: its items, plus whether it wants to be re-queried. */
 type ClientResult = { items: Item[]; isIncomplete: boolean };
 
@@ -179,27 +183,34 @@ export class Source extends BaseSource<Params> {
         completionType,
         args.completePos,
       );
-      const perClient = await Promise.all(
-        clients.map((client) =>
-          this.#requestCompletion(
+      const deadline = Date.now() + timeout;
+      const perClient: ClientResult[] = [];
+      for (const client of clients) {
+        const remaining = remainingTimeout(deadline);
+        if (remaining === 0) {
+          break;
+        }
+        perClient.push(
+          await this.#requestCompletion(
             denops,
             client,
             doc,
             text,
             byteLength,
-            timeout,
+            remaining,
             args.isIncomplete ?? false,
             metadata,
             {
               line: fullLine,
               suggestCharacter: args.completePos,
+              requestCharacter: text.length,
               offsetEncoding: client.offsetEncoding,
               enableDisplayDetail: sourceParams.enableDisplayDetail,
               enableMatchLabel: sourceParams.enableMatchLabel,
             },
-          )
-        ),
-      );
+          ),
+        );
+      }
       return {
         items: perClient.flatMap((result) => result.items),
         // One incomplete list is enough to keep re-querying: the others are

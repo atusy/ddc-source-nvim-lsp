@@ -2,6 +2,7 @@ import {
   completionMetadata,
   filterCompletionClients,
   helpPreview,
+  remainingTimeout,
   resolveCompletePosition,
   Source,
 } from "./main.ts";
@@ -66,4 +67,9 @@ Deno.test("cmdline client filtering gives the deny list precedence", () => {
     filterCompletionClients(clients, ["kakehashi"], null),
     [clients[0]],
   );
+});
+
+Deno.test("multiple cmdline clients share one timeout budget", () => {
+  assertEquals(remainingTimeout(2_000, 1_250), 750);
+  assertEquals(remainingTimeout(2_000, 2_500), 0);
 });
