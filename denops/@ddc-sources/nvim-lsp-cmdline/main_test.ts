@@ -1,4 +1,5 @@
 import {
+  clientTimeout,
   completionMetadata,
   filterCompletionClients,
   helpPreview,
@@ -72,4 +73,6 @@ Deno.test("cmdline client filtering gives the deny list precedence", () => {
 Deno.test("multiple cmdline clients share one timeout budget", () => {
   assertEquals(remainingTimeout(2_000, 1_250), 750);
   assertEquals(remainingTimeout(2_000, 2_500), 0);
+  assertEquals(clientTimeout(750, 3), 250);
+  assertEquals(clientTimeout(1, 3), 1);
 });

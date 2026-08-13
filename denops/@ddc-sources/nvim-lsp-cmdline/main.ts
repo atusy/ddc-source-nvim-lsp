@@ -92,6 +92,10 @@ export function remainingTimeout(deadline: number, now = Date.now()): number {
   return Math.max(0, deadline - now);
 }
 
+export function clientTimeout(remaining: number, clientCount: number): number {
+  return Math.max(1, Math.floor(remaining / clientCount));
+}
+
 /** One client's answer: its items, plus whether it wants to be re-queried. */
 type ClientResult = { items: Item[]; isIncomplete: boolean };
 
@@ -185,11 +189,12 @@ export class Source extends BaseSource<Params> {
       );
       const deadline = Date.now() + timeout;
       const perClient: ClientResult[] = [];
-      for (const client of clients) {
+      for (const [index, client] of clients.entries()) {
         const remaining = remainingTimeout(deadline);
         if (remaining === 0) {
           break;
         }
+        const budget = clientTimeout(remaining, clients.length - index);
         perClient.push(
           await this.#requestCompletion(
             denops,
@@ -197,7 +202,7 @@ export class Source extends BaseSource<Params> {
             doc,
             text,
             byteLength,
-            remaining,
+            budget,
             args.isIncomplete ?? false,
             metadata,
             {
