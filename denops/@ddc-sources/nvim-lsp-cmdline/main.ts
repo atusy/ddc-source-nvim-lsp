@@ -1,4 +1,8 @@
-import { BaseSource, type GatherArguments } from "@shougo/ddc-vim/source";
+import {
+  BaseSource,
+  type GatherArguments,
+  type GetCompletePositionArguments,
+} from "@shougo/ddc-vim/source";
 import type { DdcGatherItems, Item } from "@shougo/ddc-vim/types";
 import type { Denops } from "@denops/std";
 
@@ -31,6 +35,8 @@ export type Params = {
   allowedServers: string[] | null;
   /** Never query Neovim LSP clients whose names are listed. Deny wins. */
   deniedServers: string[] | null;
+  /** Select ddc's keyword boundary or replace the whole cmdline input. */
+  completePosition: "keyword" | "head";
 };
 
 type CmdlineDoc = { bufnr: number; uri: string };
@@ -52,12 +58,29 @@ export function filterCompletionClients(
   );
 }
 
+export function resolveCompletePosition(
+  policy: Params["completePosition"],
+  keywordPosition: number,
+): number {
+  return policy === "head" ? 0 : keywordPosition;
+}
+
 /** One client's answer: its items, plus whether it wants to be re-queried. */
 type ClientResult = { items: Item[]; isIncomplete: boolean };
 
 const ENCODER = new TextEncoder();
 
 export class Source extends BaseSource<Params> {
+  override async getCompletePosition(
+    args: GetCompletePositionArguments<Params>,
+  ): Promise<number> {
+    const keywordPosition = await super.getCompletePosition(args);
+    return resolveCompletePosition(
+      args.sourceParams.completePosition,
+      keywordPosition,
+    );
+  }
+
   override async gather(
     args: GatherArguments<Params>,
   ): Promise<DdcGatherItems> {
@@ -210,6 +233,7 @@ export class Source extends BaseSource<Params> {
       enableMatchLabel: false,
       allowedServers: null,
       deniedServers: null,
+      completePosition: "keyword",
     };
   }
 }
