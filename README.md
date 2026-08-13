@@ -72,6 +72,7 @@ call ddc#custom#patch_global('sourceParams', #{
       \   allowedServers: v:null,
       \   deniedServers: v:null,
       \   completePosition: 'keyword',
+      \   enableHelpPreview: v:false,
       \ },
       \ })
 call ddc#custom#patch_filetype('vim', 'sources', ['nvim-lsp-cmdline'])
@@ -82,6 +83,8 @@ source. Set `completePosition` to `"head"` for providers that return a whole
 replacement, such as expression and input completion; its default is
 `"keyword"`. Requests currently use Neovim's synchronous LSP API and can block
 for the source `timeout`, so keep local cmdline servers fast.
+Set `enableHelpPreview` only on an Ex-command alias to preview matching Vim
+help tags; it defaults to `false` so other aliases do not open unrelated help.
 
 ## Original code
 

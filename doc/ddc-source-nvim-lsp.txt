@@ -101,6 +101,13 @@ completePosition	("keyword" | "head")
 
 		Default: "keyword"
 
+               *ddc-source-nvim-lsp-cmdline-param-enableHelpPreview*
+enableHelpPreview	(boolean)
+		Preview selected words that match Vim help tags.  Enable this only
+		for an Ex-command alias; other aliases may contain unrelated words.
+
+		Default: v:false
+
 "nvim-lsp-cmdline" also accepts allowedServers and deniedServers with the
 same exact client.name and null-versus-empty semantics documented below.
 

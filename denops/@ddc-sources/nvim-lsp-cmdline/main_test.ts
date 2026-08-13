@@ -27,6 +27,7 @@ Deno.test("cmdline server filters default to unrestricted null values", () => {
   const params = new Source().params();
   assertEquals(params.allowedServers, null);
   assertEquals(params.deniedServers, null);
+  assertEquals(params.enableHelpPreview, false);
 });
 
 Deno.test("cmdline completion position defaults to the keyword boundary", () => {

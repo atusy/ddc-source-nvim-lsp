@@ -38,6 +38,8 @@ export type Params = {
   deniedServers: string[] | null;
   /** Select ddc's keyword boundary or replace the whole cmdline input. */
   completePosition: "keyword" | "head";
+  /** Resolve selected words as Vim help tags. Intended for Ex completion. */
+  enableHelpPreview: boolean;
 };
 
 type CmdlineDoc = { bufnr: number; uri: string };
@@ -107,6 +109,9 @@ export class Source extends BaseSource<Params> {
   override async getPreviewer(
     args: GetPreviewerArguments<Params>,
   ): Promise<Previewer> {
+    if (!args.sourceParams.enableHelpPreview) {
+      return { kind: "empty" };
+    }
     const tags = await fn.getcompletion(
       args.denops,
       args.item.word,
@@ -281,6 +286,7 @@ export class Source extends BaseSource<Params> {
       allowedServers: null,
       deniedServers: null,
       completePosition: "keyword",
+      enableHelpPreview: false,
     };
   }
 }
