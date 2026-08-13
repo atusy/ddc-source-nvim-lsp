@@ -126,9 +126,19 @@ function createCompletionContext(
 }
 
 export class Source extends BaseSource<Params> {
+  #gatherController?: AbortController;
+
   override async gather(
     args: CancelableGatherArguments,
   ): Promise<DdcGatherItems<UserData>> {
+    this.#gatherController?.abort();
+    this.#gatherController = new AbortController();
+    args = {
+      ...args,
+      signal: args.signal
+        ? AbortSignal.any([args.signal, this.#gatherController.signal])
+        : this.#gatherController.signal,
+    };
     const denops = args.denops;
 
     if (denops.meta.host === "nvim" && !await fn.has(denops, "nvim-0.11")) {
