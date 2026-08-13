@@ -6,7 +6,14 @@ local M = {}
 -- is attempted (src/nvim/path.c). "untitled:cmdline" (no slash) fails that
 -- check and gets resolved into an absolute, cwd-prefixed path instead.
 -- A single "/" is sufficient; the second is only for readability.
-local CMDLINE_URI = "untitled://cmdline"
+---@param languageId string
+---@return string
+function M.buffer_uri(languageId)
+  local encoded = languageId:gsub("[^%w._~-]", function(char)
+    return string.format("%%%02X", string.byte(char))
+  end)
+  return "untitled://ddc-cmdline/" .. encoded
+end
 
 ---@class ddc_source_lsp_cmdline.Client
 ---@field id integer
@@ -44,8 +51,12 @@ end
 ---@param languageId string
 ---@return { bufnr: integer, uri: string }
 function M.ensure_buffer(languageId)
+  local uri = M.buffer_uri(languageId)
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_loaded(buf) and vim.api.nvim_buf_get_name(buf) == CMDLINE_URI then
+    if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_buf_get_name(buf) == uri then
+      if not vim.api.nvim_buf_is_loaded(buf) then
+        vim.fn.bufload(buf)
+      end
       local stale_filetype = vim.bo[buf].filetype ~= languageId
       if stale_filetype then
         -- Detach clients attached for the old filetype first: leaving them
@@ -64,16 +75,17 @@ function M.ensure_buffer(languageId)
       if stale_filetype or no_clients then
         attach(buf, languageId)
       end
-      return { bufnr = buf, uri = CMDLINE_URI }
+      return { bufnr = buf, uri = uri }
     end
   end
 
   local buf = vim.api.nvim_create_buf(false, false)
   vim.bo[buf].buflisted = false
+  vim.bo[buf].bufhidden = "wipe"
   vim.bo[buf].swapfile = false
-  vim.api.nvim_buf_set_name(buf, CMDLINE_URI)
+  vim.api.nvim_buf_set_name(buf, uri)
   attach(buf, languageId)
-  return { bufnr = buf, uri = CMDLINE_URI }
+  return { bufnr = buf, uri = uri }
 end
 
 ---@param text string
