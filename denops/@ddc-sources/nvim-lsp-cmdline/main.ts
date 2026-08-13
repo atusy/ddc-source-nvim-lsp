@@ -88,7 +88,10 @@ export function helpPreview(word: string, tags: string[]): Previewer {
   return tags.length === 0 ? { kind: "empty" } : { kind: "help", tag: word };
 }
 
-export function remainingTimeout(deadline: number, now = Date.now()): number {
+export function remainingTimeout(
+  deadline: number,
+  now: number = Date.now(),
+): number {
   return Math.max(0, deadline - now);
 }
 
