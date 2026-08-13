@@ -1,5 +1,6 @@
 import {
   collectClientItems,
+  convertCompletionItems,
   normalizeCompletionResult,
 } from "./completion_result.ts";
 
@@ -35,4 +36,12 @@ Deno.test("collectClientItems retains a healthy client when another fails", asyn
 
   assertEquals(items, ["healthy"]);
   assertEquals(errors.length, 1);
+});
+
+Deno.test("convertCompletionItems isolates malformed elements", () => {
+  const items = convertCompletionItems(
+    [{ label: "healthy" }, null],
+    (item) => (item as { label: string }).label.toUpperCase(),
+  );
+  assertEquals(items, ["HEALTHY"]);
 });

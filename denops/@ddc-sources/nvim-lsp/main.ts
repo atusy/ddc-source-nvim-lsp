@@ -8,6 +8,7 @@ import {
 import { CompletionItem } from "./completion_item.ts";
 import {
   collectClientItems,
+  convertCompletionItems,
   normalizeCompletionResult,
 } from "./completion_result.ts";
 import { request } from "./request.ts";
@@ -175,13 +176,15 @@ export class Source extends BaseSource<Params> {
         args.sourceParams.snippetIndicator,
       );
 
-      const items = completionList.items.map((lspItem: LSP.CompletionItem) =>
-        completionItem.toDdcItem(
-          lspItem,
-          completionList.itemDefaults,
-          args.sourceParams.enableDisplayDetail,
-          args.sourceParams.enableMatchLabel,
-        )
+      const items = convertCompletionItems(
+        completionList.items,
+        (lspItem) =>
+          completionItem.toDdcItem(
+            lspItem as LSP.CompletionItem,
+            completionList.itemDefaults,
+            args.sourceParams.enableDisplayDetail,
+            args.sourceParams.enableMatchLabel,
+          ),
       ).filter(isDefined);
       isIncomplete = isIncomplete || completionList.isIncomplete;
 

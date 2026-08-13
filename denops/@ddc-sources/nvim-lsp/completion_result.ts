@@ -26,6 +26,20 @@ export function normalizeCompletionResult(
   };
 }
 
+export function convertCompletionItems<T>(
+  items: unknown[],
+  convert: (item: unknown) => T | undefined,
+): T[] {
+  return items.flatMap((item) => {
+    try {
+      const converted = convert(item);
+      return converted === undefined ? [] : [converted];
+    } catch {
+      return [];
+    }
+  });
+}
+
 export async function collectClientItems<T>(
   tasks: Promise<T[]>[],
   onError: (error: unknown) => void | Promise<void>,
