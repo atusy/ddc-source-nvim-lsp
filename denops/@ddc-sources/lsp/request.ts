@@ -139,7 +139,7 @@ const requestHandlers: Record<Params["lspEngine"], RequestHandler> = {
   "lspoints": requestWithLspoints,
 };
 
-export async function request(
+export function request(
   denops: Denops,
   lspEngine: Params["lspEngine"],
   method: string,
