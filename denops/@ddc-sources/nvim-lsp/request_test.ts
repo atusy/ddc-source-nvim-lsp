@@ -20,12 +20,12 @@ function fakeDenops(
   const denops = {
     name: "test",
     dispatcher,
-    call: async (_fn: string, expression: string, args: unknown[]) => {
+    call: (_fn: string, expression: string, args: unknown[]) => {
       if (expression.includes("cancel_request")) {
         cancelled.push((args as [number, number])[1]);
-        return true;
+        return Promise.resolve(true);
       }
-      return start;
+      return Promise.resolve(start);
     },
   } as unknown as Denops;
   return { denops, dispatcher, cancelled };
