@@ -6,6 +6,10 @@ import {
   uriFromBufnr,
 } from "./deps/lsp.ts";
 import { CompletionItem } from "./completion_item.ts";
+import {
+  collectClientItems,
+  normalizeCompletionResult,
+} from "./completion_result.ts";
 import { request } from "./request.ts";
 import { type Client, getClients } from "./client.ts";
 import { isClientAllowed } from "./client_filter.ts";
@@ -148,10 +152,16 @@ export class Source extends BaseSource<Params> {
         !args.sourceParams.manualOnlyServers.includes(client.name))
     );
 
-    const items = await Promise.all(clients.map(async (client) => {
+    const tasks = clients.map(async (client) => {
       const result = await this.#request(denops, client, args);
       if (!result) {
         return [];
+      }
+      const completionList = normalizeCompletionResult(result);
+      if (!completionList) {
+        throw new Error(
+          `invalid completion response: client=${client.name}(${client.id})`,
+        );
       }
 
       const completionItem = new CompletionItem(
@@ -165,9 +175,6 @@ export class Source extends BaseSource<Params> {
         args.sourceParams.snippetIndicator,
       );
 
-      const completionList = Array.isArray(result)
-        ? { items: result, isIncomplete: false }
-        : result;
       const items = completionList.items.map((lspItem: LSP.CompletionItem) =>
         completionItem.toDdcItem(
           lspItem,
@@ -179,11 +186,11 @@ export class Source extends BaseSource<Params> {
       isIncomplete = isIncomplete || completionList.isIncomplete;
 
       return items;
-    })).then((items) => items.flat(1))
-      .catch((e) => {
-        this.#printError(denops, e);
-        return [];
-      });
+    });
+    const items = await collectClientItems(
+      tasks,
+      (error) => this.#printError(denops, error as Error),
+    );
 
     return {
       items,
@@ -234,13 +241,12 @@ export class Source extends BaseSource<Params> {
       if (e instanceof DOMException) {
         return;
       }
-      await this.#printError(
-        denops,
-        `completion request failed: client=${client.name}(${client.id}), error=${
+      throw new Error(
+        `completion request failed: client=${client.name}(${client.id}), cause=${
           e instanceof Error ? e.message : String(e)
         }`,
+        { cause: e },
       );
-      throw e;
     }
   }
 
