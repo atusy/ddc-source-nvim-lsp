@@ -13,8 +13,7 @@ function M.get_clients(bufnr)
   ---@diagnostic disable-next-line: deprecated
   local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
   for _, client in pairs(get_clients({ bufnr = bufnr or 0 })) do
-    local provider = (client.server_capabilities
-                      and client.server_capabilities.completionProvider)
+    local provider = (client.server_capabilities and client.server_capabilities.completionProvider)
     if provider then
       table.insert(clients, {
         id = client.id,
@@ -59,10 +58,7 @@ end
 ---@param err unknown
 local function notify_request_error(method, err)
   vim.notify(
-    ("ddc_source_nvim_lsp: request error (%s): %s"):format(
-      method,
-      format_error(err)
-    ),
+    ("ddc_source_nvim_lsp: request error (%s): %s"):format(method, format_error(err)),
     vim.log.levels.DEBUG
   )
 end
@@ -72,22 +68,41 @@ end
 ---@param method vim.lsp.protocol.Method.ClientToServer.Request
 ---@param params table
 ---@param opts { plugin_name: string, lambda_id: string, bufnr: integer? }
----@return unknown?
+---@return { ok: boolean, request_id: integer?, error: string? }
 function M.request(clientId, method, params, opts)
   opts = opts or {}
   local client = vim.lsp.get_client_by_id(clientId)
   if not client then
-    return
+    return { ok = false, error = ("LSP client not found: %d"):format(clientId) }
   end
-  client:request(method, normalize(params), function(err, result)
+  local ok, request_id = client:request(method, normalize(params), function(err, result)
+    local response
     if err == nil then
-      pcall(function()
-        vim.fn["denops#notify"](opts.plugin_name, opts.lambda_id, { result })
-      end)
+      response = { ok = true, result = result }
     else
       notify_request_error(method, err)
+      response = { ok = false, error = format_error(err) }
     end
+    pcall(function()
+      vim.fn["denops#notify"](opts.plugin_name, opts.lambda_id, { response })
+    end)
   end, opts.bufnr or 0)
+  if not ok then
+    return { ok = false, error = "LSP client rejected request" }
+  end
+  return { ok = true, request_id = request_id }
+end
+
+---@param clientId integer
+---@param requestId integer
+---@return boolean
+function M.cancel_request(clientId, requestId)
+  local client = vim.lsp.get_client_by_id(clientId)
+  if not client then
+    return false
+  end
+  client:cancel_request(requestId)
+  return true
 end
 
 ---Blocks Nvim, but can be used in denops#request()
@@ -102,8 +117,7 @@ function M.request_sync(clientId, method, params, opts)
   if not client then
     return
   end
-  local resp = client:request_sync(
-      method, normalize(params), opts.timeout, opts.bufnr or 0)
+  local resp = client:request_sync(method, normalize(params), opts.timeout, opts.bufnr or 0)
   if resp and resp.err == nil and resp.result then
     return resp.result
   end
@@ -116,8 +130,11 @@ end
 ---@param command lsp.Command
 function M.execute(clientId, command)
   local client = vim.lsp.get_client_by_id(clientId)
-  if (client == nil or client.server_capabilities == nil
-      or not client.server_capabilities.executeCommandProvider) then
+  if
+    client == nil
+    or client.server_capabilities == nil
+    or not client.server_capabilities.executeCommandProvider
+  then
     return
   end
 

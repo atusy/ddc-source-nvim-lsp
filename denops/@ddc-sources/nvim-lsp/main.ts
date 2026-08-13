@@ -26,6 +26,9 @@ import { ensure } from "@core/unknownutil/ensure";
 import { is } from "@core/unknownutil/is";
 
 type Result = LSP.CompletionList | LSP.CompletionItem[];
+type CancelableGatherArguments = GatherArguments<Params> & {
+  signal?: AbortSignal;
+};
 
 export type ConfirmBehavior = "insert" | "replace";
 
@@ -119,7 +122,7 @@ function createCompletionContext(
 
 export class Source extends BaseSource<Params> {
   override async gather(
-    args: GatherArguments<Params>,
+    args: CancelableGatherArguments,
   ): Promise<DdcGatherItems<UserData>> {
     const denops = args.denops;
 
@@ -191,7 +194,7 @@ export class Source extends BaseSource<Params> {
   async #request(
     denops: Denops,
     client: Client,
-    args: GatherArguments<Params>,
+    args: CancelableGatherArguments,
   ): Promise<Result | undefined> {
     const bufnr = args.sourceParams.bufnr ?? await fn.bufnr(denops);
     const uri = await uriFromBufnr(denops, bufnr);
@@ -224,6 +227,7 @@ export class Source extends BaseSource<Params> {
           timeout: args.sourceOptions.timeout,
           sync: false,
           bufnr: args.sourceParams.bufnr,
+          signal: args.signal,
         },
       ) as Result;
     } catch (e) {
