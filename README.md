@@ -75,7 +75,12 @@ call ddc#custom#patch_global('sourceParams', #{
       \   enableHelpPreview: v:false,
       \ },
       \ })
-call ddc#custom#patch_filetype('vim', 'sources', ['nvim-lsp-cmdline'])
+call ddc#custom#patch_global('cmdlineSources', #{
+      \ ':': ['nvim-lsp-cmdline'],
+      \ })
+
+" Call from your CmdlineEnter setup (or equivalent).
+call ddc#enable_cmdline_completion()
 ```
 
 `allowedServers` and `deniedServers` have the same semantics as the normal

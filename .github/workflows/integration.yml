@@ -13,6 +13,10 @@ on:
       - "**/*.ts"
       - "**/*.lua"
       - "**/*.vim"
+      - "**/deno.json"
+      - "**/deno.jsonc"
+      - "README.md"
+      - "doc/**"
       - ".github/workflows/integration.yml"
   pull_request:
     branches:
@@ -21,26 +25,24 @@ on:
       - "**/*.ts"
       - "**/*.lua"
       - "**/*.vim"
+      - "**/deno.json"
+      - "**/deno.jsonc"
+      - "README.md"
+      - "doc/**"
       - ".github/workflows/integration.yml"
 
 jobs:
-  # It does not work currently.
-  # https://github.com/leafo/gh-actions-lua/issues/47
-  #check:
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - uses: actions/checkout@v6
-  #    - uses: denoland/setup-deno@v2
-  #      with:
-  #        deno-version: ${{ env.DENO_VERSION }}
-  #    - uses: leafo/gh-actions-lua@v10
-  #      with:
-  #        luaVersion: "luajit-2.1.0-beta3"
-  #    - uses: leafo/gh-actions-luarocks@v4
-  #    - run: luarocks install luacheck
-
-  #    - name: Check
-  #      run: deno task check
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - name: Check TypeScript, format, and lint
+        run: deno check **/*.ts && deno fmt --check **/*.ts && deno lint
+      - name: Check publish packages
+        run: deno task test:publish
   test:
     runs-on: ubuntu-latest
     steps:
