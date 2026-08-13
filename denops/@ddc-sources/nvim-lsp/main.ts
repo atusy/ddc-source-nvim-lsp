@@ -8,6 +8,7 @@ import {
 import { CompletionItem } from "./completion_item.ts";
 import { request } from "./request.ts";
 import { type Client, getClients } from "./client.ts";
+import { isClientAllowed } from "./client_filter.ts";
 
 import type { DdcGatherItems, Previewer } from "@shougo/ddc-vim/types";
 import {
@@ -45,6 +46,7 @@ export type UserData = {
 };
 
 export type Params = {
+  allowedServers: string[] | null;
   confirmBehavior: ConfirmBehavior;
   enableDisplayDetail: boolean;
   enableMatchLabel: boolean;
@@ -56,6 +58,7 @@ export type Params = {
     | ((body: string) => Promise<void>);
   snippetIndicator: string;
   bufnr?: number;
+  deniedServers: string[] | null;
 };
 
 function isDefined<T>(x: T | undefined): x is T {
@@ -133,8 +136,13 @@ export class Source extends BaseSource<Params> {
       denops,
       args.sourceParams.bufnr,
     ).catch(() => [])).filter((client) =>
-      args.context.event === "Manual" ||
-      !args.sourceParams.manualOnlyServers.includes(client.name)
+      isClientAllowed(
+        client.name,
+        args.sourceParams.allowedServers,
+        args.sourceParams.deniedServers,
+      ) &&
+      (args.context.event === "Manual" ||
+        !args.sourceParams.manualOnlyServers.includes(client.name))
     );
 
     const items = await Promise.all(clients.map(async (client) => {
@@ -262,6 +270,8 @@ export class Source extends BaseSource<Params> {
         denops,
         userData.clientId,
         unresolvedItem,
+        params.allowedServers,
+        params.deniedServers,
       )
       : unresolvedItem;
 
@@ -310,9 +320,13 @@ export class Source extends BaseSource<Params> {
     denops: Denops,
     clientId: number,
     lspItem: LSP.CompletionItem,
+    allowedServers: string[] | null,
+    deniedServers: string[] | null,
     bufnr?: number,
   ): Promise<LSP.CompletionItem> {
-    const clients = await getClients(denops, bufnr);
+    const clients = (await getClients(denops, bufnr)).filter((client) =>
+      isClientAllowed(client.name, allowedServers, deniedServers)
+    );
     const client = clients.find((c) => c.id === clientId);
     if (!client?.provider.resolveProvider) {
       return lspItem;
@@ -354,6 +368,8 @@ export class Source extends BaseSource<Params> {
       denops,
       userData.clientId,
       unresolvedItem,
+      params.allowedServers,
+      params.deniedServers,
       params.bufnr,
     );
     const filetype = await op.filetype.get(denops);
@@ -459,11 +475,13 @@ export class Source extends BaseSource<Params> {
 
   override params(): Params {
     return {
+      allowedServers: null,
       confirmBehavior: "insert",
       enableAdditionalTextEdit: false,
       enableDisplayDetail: false,
       enableMatchLabel: false,
       enableResolveItem: false,
+      deniedServers: null,
       manualOnlyServers: [],
       snippetEngine: "",
       snippetIndicator: "~",

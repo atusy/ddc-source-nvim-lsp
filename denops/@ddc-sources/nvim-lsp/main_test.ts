@@ -52,3 +52,9 @@ Deno.test("nvim-lsp source has no client-engine selector", () => {
   const params = new Source().params();
   assertEquals("lspEngine" in params, false);
 });
+
+Deno.test("server filters default to unrestricted null values", () => {
+  const params = new Source().params();
+  assertEquals(params.allowedServers, null);
+  assertEquals(params.deniedServers, null);
+});

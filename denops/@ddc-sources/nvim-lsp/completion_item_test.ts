@@ -10,11 +10,13 @@ import { test } from "@denops/test";
 import { assertEquals } from "@std/assert/equals";
 
 const params: Params = {
+  allowedServers: null,
   confirmBehavior: "insert",
   enableAdditionalTextEdit: true,
   enableDisplayDetail: false,
   enableMatchLabel: false,
   enableResolveItem: false,
+  deniedServers: null,
   manualOnlyServers: [],
   snippetEngine: "",
   snippetIndicator: "~",

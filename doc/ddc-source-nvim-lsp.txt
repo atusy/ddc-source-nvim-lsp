@@ -57,19 +57,19 @@ To take advantage of all the features, you need to set client_capabilities.
 	})
 <
 >vim
-	call ddc#custom#patch_global('sources', ['lsp'])
+	call ddc#custom#patch_global('sources', ['nvim-lsp'])
 
 	call ddc#custom#patch_global('sourceOptions', #{
-	      \   lsp: #{
+	      \   'nvim-lsp': #{
 	      \     isVolatile: v:true,
-	      \     mark: 'lsp',
+	      \     mark: 'L',
 	      \     forceCompletionPattern: '\.\w*|:\w*|->\w*',
 	      \   },
 	      \ })
 
 	" Register snippet engine (vim-vsnip)
 	call ddc#custom#patch_global('sourceParams', #{
-	      \   lsp: #{
+	      \   'nvim-lsp': #{
 	      \     snippetEngine: denops#callback#register({
 	      \           body -> vsnip#anonymous(body)
 	      \     }),
@@ -79,6 +79,23 @@ To take advantage of all the features, you need to set client_capabilities.
 
 ==============================================================================
 PARAMS                                                 *ddc-source-nvim-lsp-params*
+
+                                     *ddc-source-nvim-lsp-param-allowedServers*
+allowedServers		(string[] | null)
+		Use only Neovim LSP clients whose case-sensitive `client.name`
+		exactly matches an entry.  An empty list selects no clients.
+		When null, all attached completion-capable clients are allowed.
+
+		Default: null
+
+                                      *ddc-source-nvim-lsp-param-deniedServers*
+deniedServers		(string[] | null)
+		Do not use Neovim LSP clients whose case-sensitive `client.name`
+		exactly matches an entry.  Denial wins when a name also occurs in
+		|ddc-source-nvim-lsp-param-allowedServers|.  An empty list denies
+		none.
+
+		Default: null
 
                                                   *ddc-source-nvim-lsp-param-bufnr*
 bufnr			(number | v:null)

@@ -27,17 +27,19 @@ vim.lsp.config('*', {
 ```
 
 ```vim
-call ddc#custom#patch_global('sources', ['lsp'])
+call ddc#custom#patch_global('sources', ['nvim-lsp'])
 call ddc#custom#patch_global('sourceOptions', #{
-      \   lsp: #{
+      \   'nvim-lsp': #{
       \     isVolatile: v:true,
-      \     mark: 'lsp',
+      \     mark: 'L',
       \     forceCompletionPattern: '\.\w*|:\w*|->\w*',
       \   },
       \ })
 
 call ddc#custom#patch_global('sourceParams', #{
-      \   lsp: #{
+      \   'nvim-lsp': #{
+      \     allowedServers: v:null,
+      \     deniedServers: v:null,
       \     snippetEngine: denops#callback#register({
       \           body -> vsnip#anonymous(body)
       \     }),
@@ -46,6 +48,14 @@ call ddc#custom#patch_global('sourceParams', #{
       \   }
       \ })
 ```
+
+`allowedServers` and `deniedServers` contain exact, case-sensitive
+`vim.lsp.Client.name` values. Both default to `null`, which targets every
+attached completion-capable client. An empty allow list targets no clients; an
+empty deny list denies none. If a name occurs in both lists, denial wins. Use
+`:=vim.tbl_map(function(c) return c.name end, vim.lsp.get_clients())` to inspect
+the names visible to Neovim. A bridge such as kakehashi appears as one client;
+these parameters do not select servers hidden behind it.
 
 ## Original code
 
