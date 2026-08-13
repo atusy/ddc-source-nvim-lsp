@@ -5,3 +5,9 @@ import { assertEquals } from "@std/assert/equals";
 Deno.test("client filtering allows all names by default", () => {
   assertEquals(isClientAllowed("kakehashi", null, null), true);
 });
+
+Deno.test("client filtering restricts names to the allow list", () => {
+  assertEquals(isClientAllowed("kakehashi", ["kakehashi"], null), true);
+  assertEquals(isClientAllowed("copilot", ["kakehashi"], null), false);
+  assertEquals(isClientAllowed("kakehashi", [], null), false);
+});

@@ -1,7 +1,7 @@
 export function isClientAllowed(
-  _name: string,
-  _allowedServers: string[] | null,
+  name: string,
+  allowedServers: string[] | null,
   _deniedServers: string[] | null,
 ): boolean {
-  return true;
+  return allowedServers === null || allowedServers.includes(name);
 }
