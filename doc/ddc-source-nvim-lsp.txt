@@ -82,7 +82,21 @@ To take advantage of all the features, you need to set client_capabilities.
 	      \ })
 <
 
-==============================================================================
+=Completion metadata ~
+
+Both sources preserve the normalized LSP CompletionItem as a JSON string in
+item.user_data.lspitem. Decode it in your completion acceptance callback to
+access opaque server data (for example, input-method learning information).
+item.user_data.clientId identifies the producing Neovim client, and
+item.user_data.offsetEncoding describes its position encoding. These fields are
+also available on nvim-lsp-cmdline items, even when word includes a command-line
+prefix. Do not reconstruct identity from word or abbr.
+
+The command-line source inserts the item text but does not execute LSP commands
+or apply additionalTextEdits automatically. Preserving metadata does not add
+those side effects; consumers must opt into any acceptance actions.
+
+=============================================================================
 PARAMS                                                 *ddc-source-nvim-lsp-params*
 
 The following parameters are specific to "nvim-lsp-cmdline":

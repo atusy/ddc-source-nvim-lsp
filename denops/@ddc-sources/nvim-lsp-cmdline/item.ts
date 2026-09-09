@@ -11,6 +11,8 @@ export type TextEdit =
   | { insert: Range; replace: Range; newText: string };
 
 export type LspCompletionItem = {
+  /** Preserve opaque server fields for completion consumers. */
+  [field: string]: unknown;
   label: string;
   insertText?: string;
   /** LSP InsertTextFormat: 1 = PlainText, 2 = Snippet. */
@@ -124,6 +126,7 @@ function sanitizeItem(
     textEditText,
     deprecated,
     tags,
+    ...metadata
   } = item as Record<string, unknown>;
   if (typeof label !== "string") {
     return null;
@@ -137,6 +140,7 @@ function sanitizeItem(
   const resolvedTextEdit = sanitizeTextEdit(textEdit) ??
     textEditFromDefaults(defaults?.editRange, resolvedTextEditText ?? label);
   return {
+    ...metadata,
     label,
     ...(typeof insertText === "string" && { insertText }),
     ...(typeof kind === "number" && { kind }),
@@ -217,7 +221,14 @@ const COMPLETION_ITEM_KIND: Record<number, string> = {
 
 const COMPLETION_ITEM_KIND_TEXT = 1;
 
+export type UserData = {
+  lspitem: string;
+  offsetEncoding: OffsetEncoding;
+  clientId?: number;
+};
+
 export type ItemContext = {
+  clientId?: number;
   /** The whole command line: the single line of the document the server saw,
    * and what a textEdit's character offsets index into. */
   line: string;
@@ -305,7 +316,7 @@ function deprecatedHighlights(lspItem: LspCompletionItem): PumHighlight[] {
 export function toItem(
   lspItem: LspCompletionItem,
   ctx: ItemContext,
-): Item | null {
+): Item<UserData> | null {
   if (lspItem.textEdit) {
     const { start, end } = editRangeOf(lspItem.textEdit);
     const requestCharacter = ctx.requestCharacter ?? ctx.line.length;
@@ -332,6 +343,11 @@ export function toItem(
   }
   return {
     word,
+    user_data: {
+      lspitem: JSON.stringify(lspItem),
+      offsetEncoding: ctx.offsetEncoding,
+      ...(ctx.clientId !== undefined && { clientId: ctx.clientId }),
+    },
     abbr: lspItem.label,
     // Same split as ddc-source-lsp: the kind column names the
     // CompletionItemKind (defaulting to Text, as the LSP spec does not),

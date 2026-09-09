@@ -2,10 +2,20 @@ import {
   isIncompleteResult,
   type ItemContext,
   normalizeCompletionResult,
-  toItem,
+  toItem as toItemWithMetadata,
 } from "./item.ts";
 
 import { assertEquals } from "@std/assert/equals";
+
+// Every presentation case also verifies the metadata round-trip separately.
+function toItem(...args: Parameters<typeof toItemWithMetadata>) {
+  const item = toItemWithMetadata(...args);
+  if (!item) return item;
+  const { user_data, ...presentation } = item;
+  assertEquals(JSON.parse(user_data!.lspitem), args[0]);
+  assertEquals(user_data!.offsetEncoding, args[1].offsetEncoding);
+  return presentation;
+}
 
 /** Cursor at the end of an empty command line: no line text to fix up. */
 const CTX: ItemContext = {
@@ -579,4 +589,16 @@ Deno.test("toItem - drops an edit that replaces text after the cursor", () => {
     }),
     null,
   );
+});
+
+Deno.test("cmdline completion retains normalized LSP metadata for acceptance", () => {
+  const original = {
+    label: "漢字",
+    data: { reading: "かんじ", dictionaryEntry: "漢字;annotation" },
+    command: { title: "accept", command: "example.accept", arguments: [42] },
+  };
+  const [normalized] = normalizeCompletionResult([original]);
+  const item = toItemWithMetadata(normalized, { ...CTX, clientId: 7 })!;
+  assertEquals(JSON.parse(item.user_data!.lspitem), original);
+  assertEquals(item.user_data!.clientId, 7);
 });

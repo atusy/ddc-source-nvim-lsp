@@ -3,7 +3,6 @@ import {
   LSP,
   type OffsetEncoding,
   parseSnippet,
-  uriFromBufnr,
 } from "./deps/lsp.ts";
 import { CompletionItem } from "./completion_item.ts";
 import {
@@ -217,7 +216,12 @@ export class Source extends BaseSource<Params> {
     args: CancelableGatherArguments,
   ): Promise<Result | undefined> {
     const bufnr = args.sourceParams.bufnr ?? await fn.bufnr(denops);
-    const uri = await uriFromBufnr(denops, bufnr);
+    // Use the same URI as Neovim's LSP client, including unnamed buffers.
+    const uri = await denops.call(
+      "luaeval",
+      "vim.uri_from_bufnr(_A)",
+      bufnr,
+    ) as string;
     const cursorLine = (await fn.line(denops, ".")) - 1; // 0-indexed
     const lineText = await fn.getline(denops, ".");
     const byteCol = (await fn.col(denops, ".")) - 1; // 0-indexed byte offset
@@ -336,6 +340,8 @@ export class Source extends BaseSource<Params> {
         params.confirmBehavior,
         userData.suggestCharacter,
         userData.requestCharacter,
+        userData.lineOnRequest,
+        userData.offsetEncoding,
       );
   }
 

@@ -31,6 +31,7 @@ async function setup(args: {
   input: string;
   buffer: string[];
   lspItem: LSP.CompletionItem;
+  offsetEncoding?: OffsetEncoding;
 }) {
   const { row, col, completePos } = searchCursor(args.buffer, args.input);
   await nvim.nvim_buf_set_lines(args.denops, 0, 0, -1, true, args.buffer);
@@ -38,7 +39,7 @@ async function setup(args: {
 
   const completionItem = new CompletionItem(
     ClientId,
-    OffsetEncoding,
+    args.offsetEncoding ?? OffsetEncoding,
     Resolvable,
     args.buffer[row - 1],
     completePos,
@@ -224,3 +225,86 @@ test({
     ]);
   },
 });
+
+test({
+  name: "UTF-8 completion replaces multibyte pre-edit after an emoji",
+  mode: "nvim",
+  fn: async (denops) => {
+    const item: LSP.CompletionItem = {
+      label: "漢字",
+      textEdit: { range: makeRange(0, 5, 0, 11), newText: "漢字" },
+    };
+    const ddcItem = await setup({
+      denops,
+      input: "▽か",
+      buffer: ["😀 |tail"],
+      lspItem: item,
+      offsetEncoding: "utf-8",
+    });
+    await CompletionItem.confirm(
+      denops,
+      item,
+      item,
+      ddcItem.user_data!,
+      params,
+    );
+    await assertBuffer(denops, ["😀 漢字|tail"]);
+  },
+});
+
+Deno.test("replacement detection compares ranges in the negotiated encoding", () => {
+  for (
+    const [encoding, start, end] of [
+      ["utf-8", 5, 8],
+      ["utf-16", 3, 4],
+      ["utf-32", 2, 3],
+    ] as const
+  ) {
+    const item = {
+      label: "蚊",
+      textEdit: { range: makeRange(0, start, 0, end), newText: "蚊" },
+    };
+    assertEquals(
+      CompletionItem.isReplace(item, "replace", 3, 4, "😀 か!", encoding),
+      false,
+    );
+    assertEquals(
+      CompletionItem.isReplace(item, "replace", 4, 4, "😀 か!", encoding),
+      true,
+    );
+  }
+});
+
+for (
+  const [encoding, start, insertEnd, replaceEnd] of [
+    ["utf-8", 5, 11, 15],
+    ["utf-32", 2, 4, 8],
+  ] as const
+) {
+  test({
+    name: `${encoding} InsertReplaceEdit preserves suffix after replacement`,
+    mode: "nvim",
+    fn: async (denops) => {
+      const item: LSP.CompletionItem = {
+        label: "漢字",
+        textEdit: {
+          insert: makeRange(0, start, 0, insertEnd),
+          replace: makeRange(0, start, 0, replaceEnd),
+          newText: "漢字",
+        },
+      };
+      const ddcItem = await setup({
+        denops,
+        input: "▽か",
+        buffer: ["😀 |tail!"],
+        lspItem: item,
+        offsetEncoding: encoding,
+      });
+      await CompletionItem.confirm(denops, item, item, ddcItem.user_data!, {
+        ...params,
+        confirmBehavior: "replace",
+      });
+      await assertBuffer(denops, ["😀 漢字|!"]);
+    },
+  });
+}

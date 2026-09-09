@@ -213,6 +213,7 @@ export class Source extends BaseSource<Params> {
               suggestCharacter: args.completePos,
               requestCharacter: text.length,
               offsetEncoding: client.offsetEncoding,
+              clientId: client.id,
               enableDisplayDetail: sourceParams.enableDisplayDetail,
               enableMatchLabel: sourceParams.enableMatchLabel,
             },

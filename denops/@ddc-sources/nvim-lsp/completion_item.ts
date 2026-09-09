@@ -76,6 +76,8 @@ export class CompletionItem {
     confirmBehavior: ConfirmBehavior,
     suggestCharacter: number,
     requestCharacter: number,
+    lineOnRequest = "",
+    offsetEncoding: OffsetEncoding = "utf-16",
   ): boolean {
     const textEdit = lspItem.textEdit;
     if (!textEdit) {
@@ -84,8 +86,10 @@ export class CompletionItem {
     const range = "range" in textEdit
       ? textEdit.range
       : textEdit[confirmBehavior];
-    return range.start.character < suggestCharacter ||
-      range.end.character > requestCharacter;
+    return toUtf16Index(lineOnRequest, range.start.character, offsetEncoding) <
+        suggestCharacter ||
+      toUtf16Index(lineOnRequest, range.end.character, offsetEncoding) >
+        requestCharacter;
   }
 
   static async confirm(
@@ -103,6 +107,8 @@ export class CompletionItem {
       params.confirmBehavior,
       ctx.character,
       userData.suggestCharacter,
+      userData.lineOnRequest,
+      userData.offsetEncoding,
     );
 
     await this.#applySyncAdditionalTextEdits(
@@ -152,6 +158,8 @@ export class CompletionItem {
     confirmBehavior: ConfirmBehavior,
     character: number,
     suggestCharacter: number,
+    lineOnRequest: string,
+    offsetEncoding: OffsetEncoding,
   ): [number, number] {
     if (!lspItem.textEdit) {
       return [character - suggestCharacter, 0];
@@ -159,7 +167,18 @@ export class CompletionItem {
     const range = "range" in lspItem.textEdit
       ? lspItem.textEdit.range
       : lspItem.textEdit[confirmBehavior];
-    return [character - range.start.character, range.end.character - character];
+    // linePatch and LineContext use UTF-16, irrespective of the LSP encoding.
+    const start = toUtf16Index(
+      lineOnRequest,
+      range.start.character,
+      offsetEncoding,
+    );
+    const end = toUtf16Index(
+      lineOnRequest,
+      range.end.character,
+      offsetEncoding,
+    );
+    return [character - start, end - character];
   }
 
   static async #applySyncAdditionalTextEdits(
